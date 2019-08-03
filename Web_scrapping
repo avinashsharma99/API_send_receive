@@ -1,0 +1,69 @@
+import requests
+url1 = "https://tastedive.com/api/similar?q=avengers"
+url2 = "https://tastedive.com/api/similar?q=captain+america"
+response_a = requests.get(url1)
+response_t = requests.get(url2)
+#Copying json files of Avengers and Captain America results
+av_json = response_a.json()
+ca_json = response_t.json()
+#Printing Avenger movie list:
+avlist=[]
+print(av_json)
+for i in av_json['Similar']['Results']:
+   avlist.append(i['Name'])
+print(f'Avenger movie list: \n\n{avlist}')
+print('\n\n')
+print('**'*25)
+#Printing Captain America movie list:
+calist=[]
+for i in ca_json['Similar']['Results']:
+   calist.append(i['Name'])
+print(f'\n\nCaptain America\'s movie list: \n\n{calist}')
+#Combing both Avengers and Captain America list
+listc = avlist + calist
+#Printing combined list
+print('\n\n')
+print('**'*25)
+print ('\n\nCombined movie list',listc)
+#Remvoing duplicate movies
+un_list=set(listc)
+# Converting back set to list
+listunique=list(un_list)
+#Sending first movie title to ODMB API to receive the rating json file
+url_un= 'http://www.omdbapi.com/?apikey=cc068a9f&t='+listunique[0]
+un_response = requests.get(url_un)
+un_json = un_response.json()
+print('\n\n')
+print('**'*25)
+print('First movie details from ODMB API\n')
+print(un_json)
+#For loop to send API request to OMBD to get details for all movie list
+rating_json=[]
+for i in listunique:
+   unurl = requests.get('http://www.omdbapi.com/?apikey=cc068a9f&t='+i)
+   rating_json.append(unurl.json())
+print('\n\n')
+print('**'*25)
+print('All movie details from ODMB API\n')
+print(rating_json)
+# For loop to segregate just title and rating from json files for all the movies and removing '/10' wording from  the rating
+rating=[]
+title=[]
+for i in rating_json:
+  # print (i['Title'],end=': ')
+   s=i['Ratings'][0]['Value']
+   t=s.find('/10')
+   rating.append((s[0:t]))
+   title.append(i['Title'])
+print (title)
+print (rating)
+import pandas as pn
+# Storing movies and rating in dictionary format
+movie_dic={'Title':title, 'Rating':rating}
+df=pn.DataFrame(movie_dic)
+#printing all movies and rating from dictionary in tabular format using pandas datfram
+df
+#Sorting dictionary by Rating to get the top ratings
+df.sort_values(by=('Rating'), inplace=True, ascending=False)
+#Printing top three ratings as final outcome
+df.head(3)
